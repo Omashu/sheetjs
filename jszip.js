@@ -1357,7 +1357,7 @@ var out = {
 
         writer.append(dirEnd);
 
-        var zip = writer.finalize();
+        var zip = writer.finalize(options.type.toLowerCase());
 
 
 
@@ -1365,8 +1365,9 @@ var out = {
             // case "zip is an Uint8Array"
             case "uint8array" :
             case "arraybuffer" :
+		return utils.transformTo(options.type.toLowerCase(), zip);
             case "nodebuffer" :
-               return utils.transformTo(options.type.toLowerCase(), zip);
+               return zip;
             case "blob" :
                return utils.arrayBuffer2Blob(utils.transformTo("arraybuffer", zip));
             // case "zip is a string"
@@ -1476,8 +1477,14 @@ StringWriter.prototype = {
      * Finalize the construction an return the result.
      * @return {string} the generated string.
      */
-    finalize: function() {
-        return this.data.join("");
+    finalize: function(type) {
+	if (type !== "nodebuffer") return this.data.join("");
+	var buffs = [];
+
+	this.data.forEach(row => {
+		buffs.push(Buffer.from(row));
+	});
+        return Buffer.concat(buffs);
     }
 };
 
